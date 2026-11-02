@@ -402,6 +402,7 @@ ov chat   # 在另一个终端运行
 - **团队**：[关于我们](https://docs.openviking.ai/zh/about/01-about-us)
 - **交流**：<a href="https://docs.openviking.ai/zh/about/01-about-us#飞书群"><img src="../images/community/lark.svg" width="18" height="18" alt="飞书">&nbsp;飞书</a> · <a href="https://docs.openviking.ai/zh/about/01-about-us#微信群"><img src="../images/community/wechat.svg" width="18" height="18" alt="微信">&nbsp;微信</a> · <a href="https://discord.com/invite/eHvx8E9XF3"><img src="../images/community/discord.svg" width="18" height="18" alt="Discord">&nbsp;Discord</a> · <a href="https://x.com/openvikingai"><picture><source media="(prefers-color-scheme: dark)" srcset="../images/community/x-dark.svg"><img src="../images/community/x.svg" width="16" height="16" alt="X"></picture>&nbsp;X</a>
 - **贡献**：修 bug、加新功能都欢迎——见 [CONTRIBUTING_CN.md](CONTRIBUTING_CN.md)
+- **代码阅读**：第一次参与开发，先看[代码阅读指南](CODE_READING_GUIDE_CN.md)
 
 <a href="https://github.com/volcengine/OpenViking/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=volcengine/OpenViking&amp;columns=15&amp;max=120" alt="OpenViking contributors" />
