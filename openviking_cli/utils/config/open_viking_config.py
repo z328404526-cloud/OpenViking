@@ -1,7 +1,6 @@
 # Copyright (c) 2026 Beijing Volcano Engine Technology Co., Ltd.
 # SPDX-License-Identifier: AGPL-3.0
 import hashlib
-import json
 import logging
 import os
 from pathlib import Path
@@ -15,7 +14,7 @@ from openviking_cli.session.user_id import UserIdentifier
 
 from .agent_evolution_config import AgentEvolutionConfig
 from .cache_config import CacheConfig
-from .config_loader import resolve_config_path
+from .config_loader import parse_json_config, resolve_config_path
 from .config_utils import (
     DEFAULT_SERVICE_NAME,
     format_validation_error,
@@ -845,15 +844,13 @@ class OpenVikingConfigSingleton:
             # Expand $VAR and ${VAR} inside the JSON text (useful for container deployments).
             # Unset variables are left unchanged by expandvars().
             raw = os.path.expandvars(raw)
-            config_data = json.loads(raw)
+            config_data = parse_json_config(config_path, raw)
 
             config = OpenVikingConfig.from_dict(config_data)
             cls._config_file = config_path.resolve()
             cls._config_file_revision = hashlib.sha256(data).hexdigest()
             cls._config_file_content = data
             return config
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Config file JSON format error: {e}")
         except ValueError:
             raise
         except Exception as e:

@@ -357,10 +357,11 @@ def _main(recovery):
         ov_config = OpenVikingConfigSingleton.initialize(config_path=args.config)
     except (FileNotFoundError, ValueError) as e:
         if isinstance(e, ValueError):
-            print(
-                f"Failed to load OpenViking server configuration from {resolved_config_path}:\n{e}",
-                file=sys.stderr,
-            )
+            prefix = "Failed to load OpenViking server configuration"
+            # JSON syntax errors already name the file and its position.
+            if resolved_config_path is not None and str(resolved_config_path) not in str(e):
+                prefix = f"{prefix} from {resolved_config_path}"
+            print(f"{prefix}:\n{e}", file=sys.stderr)
             print(
                 "\nValidate the configuration with:\n"
                 "  openviking-server doctor\n\n"

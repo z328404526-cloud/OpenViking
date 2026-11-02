@@ -32,8 +32,16 @@ def load_config() -> StandaloneGatewayConfig:
     path = config_path()
     if path and not path.is_file():
         raise SystemExit(f"Gateway config file not found: {path}")
-    # As in ov.conf, "$VAR" references resolve from the environment.
-    raw = json.loads(os.path.expandvars(path.read_text())) if path else {}
+    if path:
+        try:
+            # As in ov.conf, "$VAR" references resolve from the environment.
+            raw = json.loads(os.path.expandvars(path.read_text()))
+        except json.JSONDecodeError as exc:
+            from openviking_cli.utils.config.config_loader import format_json_config_error
+
+            raise SystemExit(format_json_config_error(path, exc)) from exc
+    else:
+        raw = {}
     if not raw.get("openviking_url") and not os.environ.get(ENVIRONMENT_PREFIX + "OPENVIKING_URL"):
         raise SystemExit(
             "OpenViking Gateway needs an OpenViking server URL: run `openviking-gateway init` "

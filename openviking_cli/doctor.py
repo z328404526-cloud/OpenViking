@@ -24,7 +24,7 @@ from openviking.server.config import (
     ServerConfig,
     get_server_url_from_server_data,
 )
-from openviking_cli.utils.config.config_loader import resolve_config_path
+from openviking_cli.utils.config.config_loader import load_json_config, resolve_config_path
 from openviking_cli.utils.config.consts import OPENVIKING_CONFIG_ENV
 from openviking_cli.utils.config.ovcli_config import load_ovcli_config
 from openviking_cli.utils.config.vlm_config import VLMConfig
@@ -94,11 +94,10 @@ def check_config() -> tuple[bool, str, Optional[str]]:
         )
 
     try:
-        raw = config_path.read_text(encoding="utf-8-sig")
-        raw = os.path.expandvars(raw)
-        data = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        return False, f"Invalid JSON in {config_path}", f"Fix syntax error: {exc}"
+        data = load_json_config(config_path)
+    except ValueError as exc:
+        lines = [line.strip() for line in str(exc).splitlines() if line.strip()]
+        return False, lines[0], "\n".join(lines[1:]) or None
 
     if not isinstance(data, dict):
         return (
