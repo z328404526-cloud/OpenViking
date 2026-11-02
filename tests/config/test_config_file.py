@@ -70,6 +70,22 @@ def test_stale_revision_readonly_invalid_and_non_model_writes_leave_file_unchang
     assert path.read_bytes() == original
 
 
+def test_invalid_json_reports_file_and_position(config_file):
+    path, _ = config_file
+    revision = read_config_file()["revision"]
+    bad_json = '{\n  "server": {},\n}\n'
+
+    with pytest.raises(ValueError) as save_error:
+        save_config_file(bad_json, revision)
+    assert f"Invalid JSON in config file {path}" in str(save_error.value)
+    assert "line 3, column 1" in str(save_error.value)
+
+    with pytest.raises(ValueError) as preview_error:
+        preview_config_file(bad_json, {"vlm": {}})
+    assert f"Invalid JSON in config file {path}" in str(preview_error.value)
+    assert "line 3, column 1" in str(preview_error.value)
+
+
 def test_embedding_binding_rotation_preserves_implicit_input_and_identity(config_file):
     path, raw = config_file
     result = read_config_file()

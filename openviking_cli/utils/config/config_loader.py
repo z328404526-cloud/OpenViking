@@ -64,6 +64,30 @@ def resolve_config_path(
     return None
 
 
+def format_json_config_error(path: Path | str, error: json.JSONDecodeError) -> str:
+    """Describe a config file JSON syntax error with its location and a check hint.
+
+    The offending line is deliberately not echoed: configuration files can
+    contain API keys, and this message may be written to logs.
+    """
+    return (
+        f"Invalid JSON in config file {path} at line {error.lineno}, "
+        f"column {error.colno}: {error.msg}.\n"
+        "  Common causes: a trailing comma, a missing comma, an unquoted key or value, "
+        "or a comment.\n"
+        f"  Inspect line {error.lineno}, then validate the file with a JSON parser "
+        "such as `python3 -m json.tool`."
+    )
+
+
+def parse_json_config(path: Path | str, raw: str) -> Any:
+    """Parse config JSON text, reporting the file and position when it is malformed."""
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as error:
+        raise ValueError(format_json_config_error(path, error)) from error
+
+
 def load_json_config(path: Path) -> Dict[str, Any]:
     """Load and parse a JSON config file.
 
@@ -75,7 +99,8 @@ def load_json_config(path: Path) -> Dict[str, Any]:
 
     Raises:
         FileNotFoundError: If the file does not exist.
-        ValueError: If the file contains invalid JSON.
+        ValueError: If the file contains invalid JSON, with the file path and
+            the line and column of the first syntax error.
     """
     if not path.exists():
         raise FileNotFoundError(f"Config file does not exist: {path}")
@@ -87,11 +112,7 @@ def load_json_config(path: Path) -> Dict[str, Any]:
     # Unset variables are left unchanged by expandvars().
     raw = os.path.expandvars(raw)
 
-    try:
-        # print(f"Loading config file: {path}")
-        return json.loads(raw)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON in config file {path}: {e}") from e
+    return parse_json_config(path, raw)
 
 
 def require_config(

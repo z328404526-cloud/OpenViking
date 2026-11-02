@@ -203,6 +203,20 @@ def test_config_lookup_order(tmp_path, monkeypatch):
         load_config()
 
 
+def test_invalid_json_reports_file_and_position(tmp_path, monkeypatch):
+    config_file = tmp_path / "gateway.conf"
+    config_file.write_text('{\n  "port": 1935,\n}\n')
+    monkeypatch.setenv("OPENVIKING_GATEWAY_CONFIG_FILE", str(config_file))
+
+    with pytest.raises(SystemExit) as exc_info:
+        load_config()
+
+    message = str(exc_info.value)
+    assert f"Invalid JSON in config file {config_file}" in message
+    assert "line 3, column 1" in message
+    assert "json.tool" in message
+
+
 def test_environment_alone_configures_a_container(monkeypatch):
     with pytest.raises(SystemExit, match="openviking-gateway init"):
         load_config()

@@ -10,6 +10,7 @@ import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
+from openviking_cli.utils.config.config_loader import format_json_config_error
 from openviking_cli.utils.config.embedding_config import EmbeddingCredential
 from openviking_cli.utils.config.open_viking_config import (
     OpenVikingConfig,
@@ -72,6 +73,9 @@ def _validate(content: str, server_overrides: dict | None = None) -> OpenVikingC
             server_config = server_config.model_copy(update=server_overrides)
         validate_server_config(server_config)
         return OpenVikingConfig.from_dict(expanded)
+    except json.JSONDecodeError as exc:
+        path = OpenVikingConfigSingleton.get_config_file() or "ov.conf"
+        raise ValueError(format_json_config_error(path, exc)) from exc
     except (Exception, SystemExit) as exc:
         # Startup validators exit on failure; API validation must keep the server alive.
         # Validation errors may contain API keys from rejected input.
@@ -81,11 +85,12 @@ def _validate(content: str, server_overrides: dict | None = None) -> OpenVikingC
 def _parse(content: str) -> dict:
     try:
         raw = json.loads(content.lstrip("\ufeff"))
-        if not isinstance(raw, dict):
-            raise ValueError()
-        return raw
-    except ValueError as exc:
-        raise ValueError("ov.conf must contain a JSON object") from exc
+    except json.JSONDecodeError as exc:
+        path = OpenVikingConfigSingleton.get_config_file() or "ov.conf"
+        raise ValueError(format_json_config_error(path, exc)) from exc
+    if not isinstance(raw, dict):
+        raise ValueError("ov.conf must contain a JSON object")
+    return raw
 
 
 def _read(path: Path, server_overrides: dict | None = None):
@@ -93,7 +98,7 @@ def _read(path: Path, server_overrides: dict | None = None):
     try:
         content = data.decode("utf-8")
     except UnicodeError as exc:
-        raise ValueError("ov.conf must contain UTF-8 JSON") from exc
+        raise ValueError(f"{path} must contain UTF-8 JSON") from exc
     config = _validate(content, server_overrides)
     return data, content, config
 

@@ -1539,11 +1539,15 @@ class TestPartialUpdate:
 
         assert json.loads(config_path.read_text(encoding="utf-8")) == original
 
-    def test_unreadable_config_returns_error(self, tmp_path):
+    def test_unreadable_config_returns_error(self, tmp_path, capsys):
         config_path = tmp_path / "ov.conf"
-        config_path.write_text("{not json", encoding="utf-8")
-        with patch("builtins.print"):
-            assert _update_existing_config(config_path, "vlm") == 1
+        config_path.write_text('{\n  "server": {},\n}\n', encoding="utf-8")
+        assert _update_existing_config(config_path, "vlm") == 1
+
+        output = capsys.readouterr().out
+        assert str(config_path) in output
+        assert "line 3, column 1" in output
+        assert "json.tool" in output
 
 
 class TestRunInitExistingConfigMenu:

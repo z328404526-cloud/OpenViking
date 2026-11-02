@@ -21,6 +21,7 @@ from openviking_cli.utils.config.config_loader import (
 from openviking_cli.utils.config.open_viking_config import (
     CompileApiConfig,
     OpenVikingConfig,
+    OpenVikingConfigSingleton,
     ParserApiConfig,
 )
 from openviking_cli.utils.config.parser_config import CodeHostingConfig, DirectoryConfig
@@ -96,9 +97,25 @@ class TestLoadJsonConfig:
 
     def test_invalid_json(self, tmp_path):
         conf = tmp_path / "bad.conf"
-        conf.write_text("not valid json {{{")
-        with pytest.raises(ValueError, match="Invalid JSON"):
+        conf.write_text('{\n  "server": {},\n}\n')
+        with pytest.raises(ValueError) as exc_info:
             load_json_config(conf)
+
+        message = str(exc_info.value)
+        assert f"Invalid JSON in config file {conf}" in message
+        assert "line 3, column 1" in message
+        assert "python3 -m json.tool" in message
+
+    def test_singleton_reports_file_for_invalid_json(self, tmp_path):
+        conf = tmp_path / "bad.conf"
+        conf.write_text('{\n  "server": {},\n}\n')
+
+        with pytest.raises(ValueError) as exc_info:
+            OpenVikingConfigSingleton._load_from_file(str(conf))
+
+        message = str(exc_info.value)
+        assert f"Invalid JSON in config file {conf}" in message
+        assert "line 3, column 1" in message
 
     def test_expands_environment_variables(self, tmp_path, monkeypatch):
         conf = tmp_path / "env.conf"

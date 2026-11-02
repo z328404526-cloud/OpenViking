@@ -60,6 +60,11 @@ class TestCheckConfig:
             ok, detail, fix = check_config()
         assert not ok
         assert "Invalid JSON" in detail
+        assert str(config) in detail
+        assert "line 1, column 2" in detail
+        assert fix is not None
+        assert "Inspect line 1" in fix
+        assert "json.tool" in fix
 
     def test_pass_without_embedding_section(self, tmp_path: Path):
         config = tmp_path / "ov.conf"

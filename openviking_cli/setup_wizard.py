@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
+from openviking_cli.utils.config.config_loader import format_json_config_error
 from openviking_cli.utils.config.consts import DEFAULT_CONFIG_DIR, OPENVIKING_CONFIG_ENV
 from openviking_cli.utils.ollama import (
     check_ollama_running,
@@ -2100,7 +2101,11 @@ def _update_existing_config(config_path: Path, section: str) -> int:
     """Update a single section of an existing ov.conf."""
     try:
         data = json.loads(config_path.read_text(encoding="utf-8-sig"))
-    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+    except json.JSONDecodeError as exc:
+        print(f"  {_red(format_json_config_error(config_path, exc))}")
+        print(f"  {_dim('Fix or remove the file, then re-run `openviking-server init`.')}")
+        return 1
+    except (OSError, UnicodeDecodeError) as exc:
         print(f"  {_red(f'Cannot read existing config: {exc}')}")
         print(f"  {_dim('Fix or remove the file, then re-run `openviking-server init`.')}")
         return 1
